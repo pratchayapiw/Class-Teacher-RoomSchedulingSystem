@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="ระบบจัดตารางสอน ตารางเรียน และการใช้ห้อง กลุ่มสาระการเรียนรู้ภาษาต่างประเทศ">
+<title>ตารางสอนกลุ่มสาระต่างประเทศ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600&family=Sarabun:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><small>ภาคเรียนที่ 2/2569</small><b>ตารางสอน กลุ่มสาระฯ ภาษาต่างประเทศ</b><span>โรงเรียนวรราชาทินัดดามาตุวิทยา</span></div>
+    <nav class="nav" id="nav">
+      <button data-view="teacher">ตารางครู<small>Teacher</small></button>
+      <button data-view="class">ตารางเรียน<small>Class</small></button>
+      <button data-view="room">ตารางห้อง<small>Room</small></button>
+      <button data-view="day">ภาพรวมรายวัน<small>Daily</small></button>
+      <button data-view="load">สรุปข้อมูล<small>Summary</small></button>
+      <button data-view="sub">สอนแทน / แลกคาบ<small>Cover</small></button>
+      <button data-view="auto">จัดตารางอัตโนมัติ<small>Auto</small></button>
+      <hr>
+      <button data-view="data">จัดการข้อมูล<small>Data</small></button>
+    </nav>
+    <div class="side-foot">ลากคาบไปวางในช่องอื่นเพื่อย้าย · วางทับคาบอื่นเพื่อสลับ<br>Ctrl+Z เลิกทำ · Ctrl+Y ทำซ้ำ</div>
+  </aside>
+  <div class="main">
+    <header class="bar">
+      <h1 id="viewTitle">ตารางครู</h1>
+      <div class="bar-actions">
+        <button class="btn sm" id="btnUndo" title="เลิกทำ (Ctrl+Z)"><span class="ico">↶</span>เลิกทำ</button>
+        <button class="btn sm" id="btnRedo" title="ทำซ้ำ (Ctrl+Y)"><span class="ico">↷</span>ทำซ้ำ</button>
+        <button class="btn primary sm" id="btnNew"><span class="ico">+</span>เพิ่มคาบ</button>
+        <button id="conflictBadge" class="badge ok" type="button">ตรวจสอบ…</button>
+      </div>
+    </header>
+    <div class="banner" id="moveBanner" hidden><span id="moveText"></span><button class="btn sm" id="moveCancel">ยกเลิกการย้าย</button></div>
+    <section id="picker" class="picker"></section>
+    <section id="view"></section>
+    <div class="legend">
+      <span><i class="k-en1"></i>อังกฤษ พื้นฐาน</span><span><i class="k-en2"></i>อังกฤษ เพิ่มเติม</span>
+      <span><i class="k-nat"></i>ครูต่างชาติ</span><span><i class="k-zh"></i>ภาษาจีน</span><span><i class="k-ja"></i>ภาษาญี่ปุ่น</span>
+      <span><i class="k-so"></i>สังคมศึกษาฯ</span><span><i class="k-act"></i>กิจกรรม / ประชุม</span><span><i class="k-is"></i>ค้นคว้าอิสระ</span>
+    </div>
+  </div>
+</div>
+
+<dialog id="dlgEd" class="wide"><form class="dlg" id="edForm" method="dialog" novalidate>
+  <div class="dlg-head"><div><h3 id="edTitle">เพิ่มคาบ</h3><div class="sub" id="edSub"></div></div><button type="button" class="x" id="edX" aria-label="ปิด">×</button></div>
+  <div class="seg" role="group" aria-label="ประเภทคาบ">
+    <button type="button" id="edTSubj" aria-pressed="true">รายวิชา</button>
+    <button type="button" id="edTAct" aria-pressed="false">กิจกรรม / ประชุม</button>
+  </div>
+  <div class="grid3" id="edSubjF">
+    <div class="field"><label for="edCode">รหัสวิชา</label><input id="edCode" list="dlCode" autocomplete="off" placeholder="อ21102"><div class="hint" id="edCodeHint"></div></div>
+    <div class="field"><label for="edCls">ชั้น/ห้อง</label><input id="edCls" list="dlCls" autocomplete="off" placeholder="1/5"></div>
+    <div class="field"><label for="edRoom">ห้องเรียน</label><input id="edRoom" list="dlRoom" autocomplete="off" placeholder="425"></div>
+  </div>
+  <div class="field" id="edActF" hidden><label for="edAct">ชื่อกิจกรรม</label><input id="edAct" list="dlAct" autocomplete="off" placeholder="ชุมนุม"></div>
+  <div class="field"><span class="lbl">ครูผู้สอน · เลือกได้หลายคน (สอนร่วม / Team teaching)</span><div class="tpick" id="edTeachers"></div></div>
+  <div class="field"><span class="lbl" id="edSlotLbl">วันและคาบ</span><div class="slots" id="edSlots"></div></div>
+  <label class="check"><input type="checkbox" id="edLock"> ล็อกคาบนี้ ระบบจัดตารางอัตโนมัติจะไม่ย้าย</label>
+  <div id="edWarn"></div>
+  <div class="dlg-actions">
+    <button type="button" class="btn danger sm" id="edDel">ลบ</button>
+    <button type="button" class="btn sm" id="edDup">ทำสำเนา</button>
+    <button type="button" class="btn sm" id="edMove">ย้ายโดยแตะในตาราง</button>
+    <span class="spacer"></span>
+    <button type="button" class="btn ghost" id="edCancel">ยกเลิก</button>
+    <button type="submit" class="btn primary" id="edSave">บันทึก</button>
+  </div>
+</form></dialog>
+
+<dialog id="dlgConfirm"><div class="dlg">
+  <h3 id="cTitle">ยืนยัน</h3><div id="cBody" class="note"></div>
+  <div class="dlg-actions"><button type="button" class="btn ghost" id="cNo">ยกเลิก</button><button type="button" class="btn danger" id="cYes">ยืนยัน</button></div>
+</div></dialog>
+
+<dialog id="dlgConf"><div class="dlg">
+  <div class="dlg-head"><div><h3>คาบที่ชนกัน</h3><div class="sub">ครูคนเดียวกัน ชั้นเดียวกัน หรือห้องเดียวกัน ถูกจัดซ้อนในคาบเดียว · แตะเพื่อแก้ไข</div></div><button type="button" class="x" id="confX" aria-label="ปิด">×</button></div>
+  <div class="conf-list" id="confList"></div>
+</div></dialog>
+
+<datalist id="dlCode"></datalist><datalist id="dlCls"></datalist><datalist id="dlRoom"></datalist><datalist id="dlAct"></datalist>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/core.js"></script>
+<script src="js/app.js"></script>
+<script src="js/shared.js"></script>
+<script src="js/summary.js"></script>
+<script src="js/cover.js"></script>
+<script src="js/auto.js"></script>
+<script src="js/export.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/boot.js"></script>
+</body>
+</html>
